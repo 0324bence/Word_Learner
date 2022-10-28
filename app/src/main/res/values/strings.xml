@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Word Learner</string>
+    <string name="learn">Learn</string>
+    <string name="word_list">Word List</string>
+    <string name="word_list_words">Words</string>
+    <string name="word_list_groups">Groups</string>
+    <string name="settings">Settings</string>
+    <string name="settings_light_theme">Light theme</string>
+    <string name="settings_languages">Languages</string>
+    <string name="settings_langtolearn">Language to learn: </string>
+    <string name="settings_apply">Apply</string>
+
+    <string name="copyright">Copyright © 2022, 0324bence</string>
+</resources>
