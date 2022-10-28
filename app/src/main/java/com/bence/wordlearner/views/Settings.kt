@@ -77,7 +77,7 @@ fun Settings(theme: Boolean, lang1: String, lang2: String, langtolearn: Language
                 Checkbox(
                     checked = !theme,
                     onCheckedChange = {
-                        onSettingChange(SettingValues.Theme, listOf<Any>())
+                        onSettingChange(SettingValues.Theme, listOf())
                     }
                 )
             }

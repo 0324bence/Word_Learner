@@ -1,5 +1,6 @@
 package com.bence.wordlearner
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -32,11 +33,12 @@ fun Context.findActivity(): Activity? = when (this) {
 }
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("SourceLockedOrientationActivity")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            mainApp()
+            MainApp()
             val activity = LocalContext.current.findActivity()
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
@@ -45,7 +47,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun mainApp() {
+fun MainApp() {
     //#region Settings items
         var darkTheme by remember { mutableStateOf(true) }
         var lang1Label by remember { mutableStateOf("Language 1") }
@@ -91,7 +93,7 @@ fun mainApp() {
                                 SettingValues.Theme -> darkTheme = !darkTheme
                                 SettingValues.Langs -> {lang1Label = value[0] as String; lang2Label = value[1] as String}
                                 SettingValues.LangToLearn -> langToLearn = if (value[0] as Boolean) LanguageToLearn.Lang2 else LanguageToLearn.Lang1
-                                else -> {}
+                                //else -> {}
                             }
                         }
                     }
