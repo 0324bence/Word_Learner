@@ -78,7 +78,15 @@ fun Learn() {
            ),
            elevation = CardDefaults.cardElevation(5f.dp)
        ) {
-            Text("X=${cardOffsetX}", modifier = Modifier.align(Alignment.CenterHorizontally))
+           Box(
+               modifier = Modifier
+                   .fillMaxSize()
+                   .background(color = if (cardOffsetX > 100f) Color(0x266EE843) else if (cardOffsetX < -100f) Color(
+                       0x26E52626
+                   ) else Color.Transparent)
+           ) {
+               Text("X=${cardOffsetX}")
+           }
        }
        Box(
            modifier = Modifier

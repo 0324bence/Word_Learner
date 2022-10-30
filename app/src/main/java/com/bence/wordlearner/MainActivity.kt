@@ -13,18 +13,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.room.Room
 import com.bence.wordlearner.componenets.bottomNav
+import com.bence.wordlearner.database.WordDatabase
 import com.bence.wordlearner.enums.LanguageToLearn
 import com.bence.wordlearner.enums.SettingValues
 import com.bence.wordlearner.ui.theme.WordLearnerTheme
 import com.bence.wordlearner.views.Learn
 import com.bence.wordlearner.views.Settings
 import com.bence.wordlearner.views.WordList
+import com.bence.wordlearner.database.Settings
+
 
 fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
@@ -38,22 +43,31 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MainApp()
+            val db = Room.databaseBuilder(LocalContext.current, WordDatabase::class.java, "word-learner").allowMainThreadQueries().build()
+
+            MainApp(db)
             val activity = LocalContext.current.findActivity()
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
     }
 }
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainApp() {
+fun MainApp(db: WordDatabase) {
     //#region Settings items
-        var darkTheme by remember { mutableStateOf(true) }
-        var lang1Label by remember { mutableStateOf("Language 1") }
-        var lang2Label by remember { mutableStateOf("Language 2") }
-        var langToLearn by remember { mutableStateOf(LanguageToLearn.Lang2) }
-        /*TODO settings viewmodel*/
+        val settingsDao = db.settingsDao()
+        var settings = settingsDao.getSettings()
+        if (settings == null) {
+            settingsDao.insertNew(Settings(1, darkTheme = true, lang1Label = "Language 1", lang2Label = "Language 2", langToLearn = LanguageToLearn.Lang2))
+            settings = settingsDao.getSettings()
+        }
+        var darkTheme by rememberSaveable { mutableStateOf(settings.darkTheme) }
+        var lang1Label by rememberSaveable { mutableStateOf(settings.lang1Label) }
+        var lang2Label by rememberSaveable { mutableStateOf(settings.lang2Label) }
+        var langToLearn by rememberSaveable { mutableStateOf(settings.langToLearn) }
     //#endregion
     WordLearnerTheme(darkTheme) {
         val navController = rememberNavController()
@@ -90,9 +104,19 @@ fun MainApp() {
                     ) {
                         Settings(theme = darkTheme, lang1 = lang1Label, lang2 = lang2Label, langtolearn = langToLearn) { state, value ->
                             when (state) {
-                                SettingValues.Theme -> darkTheme = !darkTheme
-                                SettingValues.Langs -> {lang1Label = value[0] as String; lang2Label = value[1] as String}
-                                SettingValues.LangToLearn -> langToLearn = if (value[0] as Boolean) LanguageToLearn.Lang2 else LanguageToLearn.Lang1
+                                SettingValues.Theme -> {
+                                    darkTheme = !darkTheme
+                                    settingsDao.updateSettings(darkTheme = darkTheme)
+                                }
+                                SettingValues.Langs -> {
+                                    lang1Label = value[0] as String
+                                    lang2Label = value[1] as String
+                                    settingsDao.updateSettings(lang1 = lang1Label, lang2 = lang2Label)
+                                }
+                                SettingValues.LangToLearn -> {
+                                    langToLearn = if (value[0] as Boolean) LanguageToLearn.Lang2 else LanguageToLearn.Lang1
+                                    settingsDao.updateSettings(langToLearn = langToLearn)
+                                }
                                 //else -> {}
                             }
                         }

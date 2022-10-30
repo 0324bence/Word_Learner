@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -11,6 +13,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.bence.wordlearner.R
+import com.bence.wordlearner.componenets.FullScreenDialog
 import com.bence.wordlearner.componenets.GroupItem
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,18 +42,19 @@ fun BottomAppBar(FabClick:()->Unit, SingleClick:()->Unit, ListClick:()->Unit) {
             IconButton(onClick = ListClick) {
                 Icon(painter = painterResource(id = R.drawable.addlist_icon), contentDescription = "Addmore button")
             }
-        }
+        },
+        tonalElevation = 0f.dp
     )
 }
 
 @Composable
-fun List() {
+fun List(onGroupClick: ()->Unit) {
     val itemList by remember { mutableStateOf(mutableStateListOf(1)+(2..30)) }
     val listState = rememberLazyListState()
     LazyColumn(state = listState) {
         item { Divider(color = MaterialTheme.colorScheme.secondary, thickness = 2f.dp) }
         items(itemList) { item ->
-            GroupItem(title = item.toString(), onClick = {/**/})
+            GroupItem(title = item.toString(), onClick = onGroupClick)
         }
     }
 }
@@ -59,16 +63,17 @@ fun List() {
 @Composable
 fun WordList() {
     var addSingleDialog by remember { mutableStateOf(false) }
+    var groupDialog by remember { mutableStateOf(false) }
     Scaffold(
         topBar = { TopAppBar() },
-        bottomBar = {
-            BottomAppBar(FabClick = { /*TODO*/ }, SingleClick = { addSingleDialog = true }, ListClick = {})
-        }
+        floatingActionButton = { FloatingActionButton(onClick = { /*TODO*/ }) {
+            Icon(imageVector = Icons.Outlined.Add, contentDescription = "Add icon")
+        }}
     ) {
         Box(modifier = Modifier
             .fillMaxSize()
             .padding(it)) {
-                List()
+                List(onGroupClick = {groupDialog = true})
             // Add Single dialog
             if (addSingleDialog) {
                 var lang1 by remember { mutableStateOf("") }
@@ -86,6 +91,24 @@ fun WordList() {
                         }
                     }
                 )
+            }
+            // Group content dialog
+            if (groupDialog) {
+                FullScreenDialog(
+                    onDismiss = { groupDialog = false },
+                    title = "Title",
+                    bottomBar = { BottomAppBar(FabClick = { /*TODO*/ }, SingleClick = { addSingleDialog = true }, ListClick = {}) }
+                ) {
+                    Scaffold() { padding ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(padding)
+                        ) {
+                            Text("Text")
+                        }
+                    }
+                }
             }
         }
     }
