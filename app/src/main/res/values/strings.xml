@@ -13,6 +13,8 @@
     <string name="settings_languages">Languages</string>
     <string name="settings_langtolearn">Language to learn: </string>
     <string name="settings_apply">Apply</string>
+    <string name="settings_priority">Priority</string>
+    <string name="settings_default_priority">Default Priority</string>
 
     <string name="copyright">Copyright © 2022, 0324bence</string>
 </resources>

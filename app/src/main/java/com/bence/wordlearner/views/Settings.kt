@@ -31,12 +31,37 @@ fun LanguageModal(state: Boolean, lang1: String, lang2: String, onDismiss: ()->U
                 Column(verticalArrangement = Arrangement.spacedBy(10f.dp)) {
                     OutlinedTextField(value = lang1Label, onValueChange = { lang1Label = it }, label = {
                         androidx.compose.material3.Text(
-                            "Language1"
+                            lang1
                         )
                     }, singleLine = true)
                     OutlinedTextField(value = lang2Label, onValueChange = { lang2Label = it }, label = {
                         androidx.compose.material3.Text(
-                            "Language2"
+                            lang2
+                        )
+                    }, singleLine = true)
+                }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PriorityModal(state: Boolean, priority: Int, onDismiss: ()->Unit, onConfirm: (value: Int)->Unit) {
+    if (state) {
+        var priorityText by remember { mutableStateOf(priority.toString()) }
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            confirmButton = { TextButton(onClick = {
+                val result = priorityText.toIntOrNull()
+                if (result != null) onConfirm(result)
+            }
+        ) { Text(text = stringResource(id = R.string.settings_apply), color = MaterialTheme.colorScheme.primary) }},
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10f.dp)) {
+                    OutlinedTextField(value = priorityText, onValueChange = { priorityText = it }, label = {
+                        androidx.compose.material3.Text(
+                            stringResource(id = R.string.settings_priority)
                         )
                     }, singleLine = true)
                 }
@@ -64,8 +89,9 @@ fun TopBar() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Settings(theme: Boolean, lang1: String, lang2: String, langtolearn: LanguageToLearn, onSettingChange: (SettingValues:SettingValues, value: List<Any>)->Unit) {
+fun Settings(theme: Boolean, lang1: String, lang2: String, langtolearn: LanguageToLearn, defaultPriority: Int, onSettingChange: (SettingValues:SettingValues, value: List<Any>)->Unit) {
     var langModal by remember { mutableStateOf(false) }
+    var priorityModal by remember { mutableStateOf(false) }
     Scaffold(topBar = { TopBar() }) {
         Column(modifier = Modifier
             .fillMaxSize()
@@ -98,6 +124,11 @@ fun Settings(theme: Boolean, lang1: String, lang2: String, langtolearn: Language
                     checked = value
                 })
             }
+            SettingItem(headline = { Text(text = stringResource(id = R.string.settings_default_priority), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface) }) {
+                TextButton(onClick = { priorityModal = true }) {
+                    Text(text = defaultPriority.toString(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                }
+            }
             Text(text = stringResource(id = R.string.copyright),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.labelSmall,
@@ -113,6 +144,15 @@ fun Settings(theme: Boolean, lang1: String, lang2: String, langtolearn: Language
             onConfirm = { val1, val2 ->
                 onSettingChange(SettingValues.Langs, listOf(val1, val2))
                 langModal = false
+            }
+        )
+        PriorityModal(
+            state = priorityModal,
+            priority = defaultPriority,
+            onDismiss = { priorityModal = false },
+            onConfirm = {value ->
+                onSettingChange(SettingValues.Priority, listOf(value))
+                priorityModal = false
             }
         )
     }

@@ -23,4 +23,7 @@ interface SettingsDAO {
 
     @Query("UPDATE settings SET lang_to_learn = :langToLearn WHERE id = 1")
     fun updateSettings(langToLearn: LanguageToLearn)
+
+    @Query("UPDATE settings SET default_priority = :defaultPriority WHERE id = 1")
+    fun updateSettings(defaultPriority: Int)
 }

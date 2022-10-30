@@ -61,13 +61,14 @@ fun MainApp(db: WordDatabase) {
         val settingsDao = db.settingsDao()
         var settings = settingsDao.getSettings()
         if (settings == null) {
-            settingsDao.insertNew(Settings(1, darkTheme = true, lang1Label = "Language 1", lang2Label = "Language 2", langToLearn = LanguageToLearn.Lang2))
+            settingsDao.insertNew(Settings())
             settings = settingsDao.getSettings()
         }
         var darkTheme by rememberSaveable { mutableStateOf(settings.darkTheme) }
         var lang1Label by rememberSaveable { mutableStateOf(settings.lang1Label) }
         var lang2Label by rememberSaveable { mutableStateOf(settings.lang2Label) }
         var langToLearn by rememberSaveable { mutableStateOf(settings.langToLearn) }
+        var defaultPriority by rememberSaveable { mutableStateOf(settings.defaultPriority) }
     //#endregion
     WordLearnerTheme(darkTheme) {
         val navController = rememberNavController()
@@ -102,7 +103,7 @@ fun MainApp(db: WordDatabase) {
                     Box(modifier = Modifier
                         .fillMaxSize(),
                     ) {
-                        Settings(theme = darkTheme, lang1 = lang1Label, lang2 = lang2Label, langtolearn = langToLearn) { state, value ->
+                        Settings(theme = darkTheme, lang1 = lang1Label, lang2 = lang2Label, langtolearn = langToLearn, defaultPriority = defaultPriority) { state, value ->
                             when (state) {
                                 SettingValues.Theme -> {
                                     darkTheme = !darkTheme
@@ -116,6 +117,10 @@ fun MainApp(db: WordDatabase) {
                                 SettingValues.LangToLearn -> {
                                     langToLearn = if (value[0] as Boolean) LanguageToLearn.Lang2 else LanguageToLearn.Lang1
                                     settingsDao.updateSettings(langToLearn = langToLearn)
+                                }
+                                SettingValues.Priority -> {
+                                    defaultPriority = value[0] as Int
+                                    settingsDao.updateSettings(defaultPriority = defaultPriority)
                                 }
                                 //else -> {}
                             }

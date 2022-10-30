@@ -45,3 +45,25 @@ fun WordItem(lang1: String, lang2: String, priority: String, onDelete: ()->Unit)
     )
     Divider(color = MaterialTheme.colorScheme.secondary, thickness = 2f.dp)
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NormalWordItem(lang1: String, lang2: String, priority: String) {
+    ListItem(
+        headlineText = {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+                Column() {
+                    Text(text = lang1, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineMedium)
+                }
+                Column {
+                    Text(text = "-", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineMedium)
+                }
+                Column() {
+                    Text(text = lang2, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineMedium)
+                }
+            }
+        },
+        trailingContent = {Text(text = priority)}
+    )
+    Divider(color = MaterialTheme.colorScheme.secondary, thickness = 2f.dp)
+}

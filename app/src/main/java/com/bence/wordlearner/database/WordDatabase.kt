@@ -1,8 +1,6 @@
 package com.bence.wordlearner.database
 
-import androidx.room.AutoMigration
-import androidx.room.Database
-import androidx.room.RoomDatabase
+import androidx.room.*
 
 //@Database(entities = [Settings::class], version = 1, exportSchema = true)
 //abstract class WordDatabase : RoomDatabase() {
@@ -15,8 +13,21 @@ import androidx.room.RoomDatabase
 //    abstract fun wordDao(): wordDAO
 //}
 
-@Database(entities = [Settings::class, Group::class, Word::class], version = 4, autoMigrations = [AutoMigration(from = 3, to = 4)], exportSchema = true)
+@Database(entities = [Settings::class, Group::class, Word::class], version = 5, autoMigrations = [AutoMigration(from = 4, to = 5)], exportSchema = true)
+@TypeConverters(Converters::class)
 abstract class WordDatabase : RoomDatabase() {
     abstract fun settingsDao(): SettingsDAO
     abstract fun wordDao(): wordDAO
+}
+
+class Converters {
+    @TypeConverter
+    fun fromPartioalGroup(value: partialGroup): Int {
+        return value.id
+    }
+
+    @TypeConverter
+    fun fromPartioalWord(value: partialWord): Int {
+        return value.id
+    }
 }
