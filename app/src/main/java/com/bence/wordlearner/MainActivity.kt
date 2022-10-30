@@ -95,7 +95,7 @@ fun MainApp(db: WordDatabase) {
                     Box(modifier = Modifier
                         .fillMaxSize(),
                     ) {
-                        WordList()
+                        WordList(db, langToLearn = langToLearn)
                     }
                 }
                 composable(route = "settings_screen") {

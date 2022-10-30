@@ -81,8 +81,8 @@ fun Learn() {
            Box(
                modifier = Modifier
                    .fillMaxSize()
-                   .background(color = if (cardOffsetX > 100f) Color(0x266EE843) else if (cardOffsetX < -100f) Color(
-                       0x26E52626
+                   .background(color = if (cardOffsetX > 100f) Color(0xD6EE843) else if (cardOffsetX < -100f) Color(
+                       0xDE52626
                    ) else Color.Transparent)
            ) {
                Text("X=${cardOffsetX}")

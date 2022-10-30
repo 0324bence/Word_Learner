@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -15,6 +16,13 @@ import androidx.compose.ui.unit.dp
 import com.bence.wordlearner.R
 import com.bence.wordlearner.componenets.FullScreenDialog
 import com.bence.wordlearner.componenets.GroupItem
+import com.bence.wordlearner.componenets.NormalGroupItem
+import com.bence.wordlearner.componenets.WordItem
+import com.bence.wordlearner.database.Group
+import com.bence.wordlearner.database.Word
+import com.bence.wordlearner.database.WordDatabase
+import com.bence.wordlearner.database.wordDAO
+import com.bence.wordlearner.enums.LanguageToLearn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,52 +56,95 @@ fun BottomAppBar(FabClick:()->Unit, SingleClick:()->Unit, ListClick:()->Unit) {
 }
 
 @Composable
-fun List(onGroupClick: ()->Unit) {
-    val itemList by remember { mutableStateOf(mutableStateListOf(1)+(2..30)) }
+fun GroupList(list: List<Group>, onClick: (id: Int)->Unit, onDelete: (id: Int)->Unit) {
     val listState = rememberLazyListState()
     LazyColumn(state = listState) {
         item { Divider(color = MaterialTheme.colorScheme.secondary, thickness = 2f.dp) }
-        items(itemList) { item ->
-            GroupItem(title = item.toString(), onClick = onGroupClick)
+        item { NormalGroupItem(title = stringResource(id = R.string.word_list_all), onClick = {onClick(-3)}) }
+        items(list) { item ->
+            GroupItem(title = item.name, onClick = { onClick(item.id) }, onDelete = { onDelete(item.id) })
+        }
+    }
+}
+
+@Composable
+fun WordsList(list: List<Word>, onDelete: ()->Unit) {
+    val listState = rememberLazyListState()
+    LazyColumn(state = listState) {
+//        item { Divider(color = MaterialTheme.colorScheme.secondary, thickness = 2f.dp) }
+        items(list) { item ->
+            WordItem(lang1 = item.lang1, lang2 = item.lang2, priority = if (item.priority >= 0) "[${item.priority}]" else stringResource(id = R.string.word_list_priority), onDelete = onDelete)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WordList() {
+fun WordList(db: WordDatabase, langToLearn: LanguageToLearn) {
     var addSingleDialog by remember { mutableStateOf(false) }
     var groupDialog by remember { mutableStateOf(false) }
+    var addGroupDialog by remember { mutableStateOf(false) }
+
+    val settingsDAO = db.settingsDao()
+    val settings = settingsDAO.getSettings()
+    val wordDAO = db.wordDao()
+    val groups = remember { wordDAO.getGroups().toMutableStateList() }
+    var currentGroup = 0
     Scaffold(
         topBar = { TopAppBar() },
-        floatingActionButton = { FloatingActionButton(onClick = { /*TODO*/ }) {
+        floatingActionButton = { FloatingActionButton(onClick = { addGroupDialog = true }) {
             Icon(imageVector = Icons.Outlined.Add, contentDescription = "Add icon")
         }}
     ) {
         Box(modifier = Modifier
             .fillMaxSize()
             .padding(it)) {
-                List(onGroupClick = {groupDialog = true})
-            // Add Single dialog
-            if (addSingleDialog) {
-                var lang1 by remember { mutableStateOf("") }
-                var lang2 by remember { mutableStateOf("") }
+                GroupList(
+                    list = groups,
+                    onClick = {group -> groupDialog = true; currentGroup = group},
+                    onDelete = {}
+                )
+
+
+
+            //Add new group
+            if (addGroupDialog) {
+                var groupName by remember { mutableStateOf("") }
                 AlertDialog(
-                    onDismissRequest = { addSingleDialog = false },
-                    confirmButton = { TextButton(onClick = { addSingleDialog = false }) {
+                    onDismissRequest = { addGroupDialog = false },
+                    confirmButton = { TextButton(onClick = {
+                        val newGroup = Group(name = groupName)
+                        groups.add(newGroup)
+                        wordDAO.addGroup(newGroup)
+                        addGroupDialog = false
+                    }) {
                         Text("Add")
                     }},
-                    icon = { Icon(painter = painterResource(id = R.drawable.plus1_icon), contentDescription = "Plus1 button") },
+                    title = { Text(text = stringResource(id = R.string.word_list_new_group)) },
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(10f.dp)) {
-                            OutlinedTextField(value = lang1, onValueChange = { str -> lang1 = str }, label = { Text("Language1") }, singleLine = true)
-                            OutlinedTextField(value = lang2, onValueChange = { str -> lang2 = str }, label = { Text("Language2") }, singleLine = true)
+                            OutlinedTextField(value = groupName, onValueChange = { str -> groupName = str }, label = { Text(
+                                stringResource(id = R.string.word_list_group)) }, singleLine = true)
                         }
                     }
                 )
             }
+
             // Group content dialog
             if (groupDialog) {
+                val head = remember {
+                    mutableStateListOf(
+                        Word(-1, -1, settings.lang1Label, settings.lang2Label, -1)
+                    )
+                }
+
+                val wordList = (
+                        if (currentGroup < 0)
+                            wordDAO.getAllWords(settings.langToLearn).toMutableStateList()
+                        else
+                            wordDAO.getWords(currentGroup, settings.langToLearn).toMutableStateList()
+                        )
+
                 FullScreenDialog(
                     onDismiss = { groupDialog = false },
                     title = "Title",
@@ -105,9 +156,38 @@ fun WordList() {
                                 .fillMaxSize()
                                 .padding(padding)
                         ) {
-                            Text("Text")
+                            WordsList(
+                                list = head + wordList,
+                                onDelete = {}
+                            )
                         }
                     }
+                }
+
+                // Add Single word dialog
+                if (addSingleDialog) {
+                    var lang1 by remember { mutableStateOf("") }
+                    var lang2 by remember { mutableStateOf("") }
+                    AlertDialog(
+                        onDismissRequest = { addSingleDialog = false },
+                        confirmButton = { TextButton(onClick = {
+                            if (currentGroup >= 0) {
+                                val newWord = Word(lang1 = lang1, lang2 = lang2, priority = 50 /*TODO default priority*/, groupId = currentGroup)
+                                wordList.add(newWord)
+                                db.wordDao().addWord(newWord)
+                                addSingleDialog = false
+                            }
+                        }) {
+                            Text("Add")
+                        }},
+                        icon = { Icon(painter = painterResource(id = R.drawable.plus1_icon), contentDescription = "Plus1 button") },
+                        text = {
+                            Column(verticalArrangement = Arrangement.spacedBy(10f.dp)) {
+                                OutlinedTextField(value = lang1, onValueChange = { str -> lang1 = str }, label = { Text(settings.lang1Label) }, singleLine = true)
+                                OutlinedTextField(value = lang2, onValueChange = { str -> lang2 = str }, label = { Text(settings.lang2Label) }, singleLine = true)
+                            }
+                        }
+                    )
                 }
             }
         }
