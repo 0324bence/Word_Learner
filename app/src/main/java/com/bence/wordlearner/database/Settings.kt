@@ -12,5 +12,6 @@ data class Settings(
     @ColumnInfo(name = "lang1_label") val lang1Label: String = "Language 1",
     @ColumnInfo(name = "lang2_label") val lang2Label: String = "Language 2",
     @ColumnInfo(name = "lang_to_learn") val langToLearn: LanguageToLearn = LanguageToLearn.Lang2,
-    @ColumnInfo(name = "default_priority", defaultValue = "50") val defaultPriority: Int = 50
+    @ColumnInfo(name = "default_priority", defaultValue = "50") val defaultPriority: Int = 50,
+    @ColumnInfo(name = "priority_change", defaultValue = "10") val changeAmount: Int = 10
 )

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface wordDAO {
 
-    @Query("SELECT * FROM `group`")
+    @Query("SELECT * FROM `group` ORDER BY name ASC")
     fun getGroups(): Flow<List<Group>>
 
     @Query("SELECT * FROM `Group` WHERE id = :id")
@@ -29,6 +29,22 @@ interface wordDAO {
 
     @Query("SELECT * FROM word ORDER BY case :langToLearn when 0 then lang1 when 1 then lang2 end ASC")
     fun getAllWords(langToLearn: LanguageToLearn): Flow<List<Word>>
+
+    @Query("SELECT * FROM (SELECT * FROM word WHERE group_id = :groupId ORDER BY priority DESC LIMIT 3) ORDER BY RANDOM() LIMIT 1")
+    fun getWordByPriority(groupId: Int): Flow<Word>
+
+    //@Query("SELECT * FROM (SELECT * FROM word ORDER BY priority DESC LIMIT 3) ORDER BY RANDOM() LIMIT 1")
+    @Query("SELECT * FROM (SELECT * FROM word ORDER BY priority DESC LIMIT 3) ORDER BY RANDOM() LIMIT 1")
+    fun getAllWordByPriority(): Flow<Word>
+
+    @Query("UPDATE word SET priority = (priority - :amount) WHERE id = :wordId")
+    fun updateWordPriority(wordId: Int, amount: Int)
+
+    @Query("UPDATE word SET is_flagged = :value WHERE id = :wordId")
+    fun flagWord(wordId: Int, value: Boolean)
+
+    @Query("SELECT * FROM word WHERE is_flagged = 1")
+    fun getFlaggedWords(): List<Word>
 
     @Delete(entity = Word::class)
     fun deleteWord(wordId: partialWord)

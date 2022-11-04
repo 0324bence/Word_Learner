@@ -26,4 +26,7 @@ interface SettingsDAO {
 
     @Query("UPDATE settings SET default_priority = :defaultPriority WHERE id = 1")
     fun updateSettings(defaultPriority: Int)
+
+    @Query("UPDATE settings SET priority_change = :changeAmount WHERE id = 1")
+    fun updateSettingsPriorityChange(changeAmount: Int)
 }

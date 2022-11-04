@@ -13,7 +13,7 @@ import androidx.room.*
 //    abstract fun wordDao(): wordDAO
 //}
 
-@Database(entities = [Settings::class, Group::class, Word::class], version = 5, autoMigrations = [AutoMigration(from = 4, to = 5)], exportSchema = true)
+@Database(entities = [Settings::class, Group::class, Word::class], version = 8, autoMigrations = [AutoMigration(from = 7, to = 8)], exportSchema = true)
 @TypeConverters(Converters::class)
 abstract class WordDatabase : RoomDatabase() {
     abstract fun settingsDao(): SettingsDAO

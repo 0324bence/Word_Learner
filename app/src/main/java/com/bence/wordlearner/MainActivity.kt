@@ -70,6 +70,7 @@ fun MainApp(db: WordDatabase) {
         var langToLearn by rememberSaveable { mutableStateOf(settings.langToLearn) }
         var defaultPriority by rememberSaveable { mutableStateOf(settings.defaultPriority) }
     //#endregion
+    var currentGroup by remember { mutableStateOf(-1) }
     WordLearnerTheme(darkTheme) {
         val navController = rememberNavController()
 
@@ -89,14 +90,21 @@ fun MainApp(db: WordDatabase) {
                     Box(modifier = Modifier
                         .fillMaxSize(),
                     ) {
-                        Learn()
+                        Learn(db, currentGroup)
                     }
                 }
                 composable(route = "list_screen") {
                     Box(modifier = Modifier
                         .fillMaxSize(),
                     ) {
-                        WordList(db, langToLearn = langToLearn)
+                        WordList(
+                            db,
+                            langToLearn = langToLearn,
+                            onGroupChange = {
+                                currentGroup = it
+                            },
+                            selectedGroup = currentGroup
+                        )
                     }
                 }
                 composable(route = "settings_screen") {

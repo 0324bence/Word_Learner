@@ -15,16 +15,10 @@ import androidx.compose.ui.unit.dp
 fun WordItem(lang1: String, lang2: String, priority: String, onDelete: ()->Unit) {
     SwipableItem(
         headLine = {
-                   Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-                       Column() {
-                           Text(text = lang1, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineMedium)
-                       }
-                       Column {
-                           Text(text = "-", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineMedium)
-                       }
-                       Column() {
-                           Text(text = lang2, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineMedium)
-                       }
+                   Row(modifier = Modifier.fillMaxWidth().heightIn(min = 1.dp, max = 60.dp), horizontalArrangement = Arrangement.SpaceAround) {
+                           Text(text = lang1, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium)
+                           Text(text = "-", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium)
+                           Text(text = lang2, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium)
                    }
         },
         trailingContent = { Text(text = priority) },
@@ -52,15 +46,9 @@ fun NormalWordItem(lang1: String, lang2: String, priority: String) {
     ListItem(
         headlineText = {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-                Column() {
-                    Text(text = lang1, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineMedium)
-                }
-                Column {
-                    Text(text = "-", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineMedium)
-                }
-                Column() {
-                    Text(text = lang2, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineMedium)
-                }
+                    Text(text = lang1, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium)
+                    Text(text = "-", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium)
+                    Text(text = lang2, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium)
             }
         },
         trailingContent = {Text(text = priority)}

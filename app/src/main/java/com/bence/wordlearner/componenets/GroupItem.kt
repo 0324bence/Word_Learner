@@ -14,6 +14,8 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -31,9 +33,9 @@ fun NormalGroupItem(title: String, onClick: ()->Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupItem(title: String, onClick: ()->Unit, onDelete: ()->Unit) {
+fun GroupItem(title: String, onClick: ()->Unit, onDelete: ()->Unit, isSelected: Boolean) {
     SwipableItem(
-        headLine = { Text(text = title, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.headlineMedium) },
+        headLine = { Text(text = title, color = MaterialTheme.colorScheme.onSurface, style = if (isSelected) MaterialTheme.typography.headlineMedium + TextStyle(textDecoration = TextDecoration.Underline) else MaterialTheme.typography.headlineMedium) },
         trailingContent = { IconButton(onClick = onClick) { Icon(imageVector = Icons.Default.KeyboardArrowRight, contentDescription = "more arrow") } },
         actions = {
             IconButton(

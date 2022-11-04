@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
@@ -20,6 +21,7 @@ import com.bence.wordlearner.R
 import com.bence.wordlearner.componenets.*
 import com.bence.wordlearner.database.*
 import com.bence.wordlearner.enums.LanguageToLearn
+import java.lang.IndexOutOfBoundsException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,13 +55,14 @@ fun BottomAppBar(FabClick:()->Unit, SingleClick:()->Unit, ListClick:()->Unit) {
 }
 
 @Composable
-fun GroupList(list: List<Group>, onClick: (id: Int)->Unit, onDelete: (id: Int)->Unit) {
+fun GroupList(list: List<Group>, onClick: (id: Int)->Unit, onDelete: (id: Int)->Unit, selectedGroup: Int) {
     val listState = rememberLazyListState()
     LazyColumn(state = listState) {
         item { Divider(color = MaterialTheme.colorScheme.secondary, thickness = 2f.dp) }
-        item { NormalGroupItem(title = stringResource(id = R.string.word_list_all), onClick = {onClick(-3)}) }
+        item { NormalGroupItem(title = stringResource(id = R.string.word_list_all), onClick = {onClick(-1)}) }
+        //item { NormalGroupItem(title = stringResource(id = R.string.word_list_flagged), onClick = {onClick(-2)}) }
         items(list, key = {it.id}) { item ->
-            GroupItem(title = item.name, onClick = { onClick(item.id) }, onDelete = { onDelete(item.id) })
+            GroupItem(title = item.name, onClick = { onClick(item.id) }, onDelete = { onDelete(item.id) }, isSelected = (selectedGroup == item.id))
         }
     }
 }
@@ -69,7 +72,7 @@ fun WordsList(list: List<Word>, onDelete: (id: Int)->Unit) {
     val listState = rememberLazyListState()
     LazyColumn(state = listState) {
 //        item { Divider(color = MaterialTheme.colorScheme.secondary, thickness = 2f.dp) }
-        items(list) { item ->
+        items(list, key = {it.id}) { item ->
             if (item.id > 0) {
                 WordItem(lang1 = item.lang1, lang2 = item.lang2, priority = "[${item.priority}]", onDelete = { onDelete(item.id) })
             } else {
@@ -81,10 +84,11 @@ fun WordsList(list: List<Word>, onDelete: (id: Int)->Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WordList(db: WordDatabase, langToLearn: LanguageToLearn) {
+fun WordList(db: WordDatabase, langToLearn: LanguageToLearn, onGroupChange: (groupId: Int)->Unit, selectedGroup: Int) {
     var addSingleDialog by remember { mutableStateOf(false) }
     var groupDialog by remember { mutableStateOf(false) }
     var addGroupDialog by remember { mutableStateOf(false) }
+    var addListDialog by remember { mutableStateOf(false) }
 
     val settingsDAO = db.settingsDao()
     val settings = settingsDAO.getSettings()
@@ -109,7 +113,8 @@ fun WordList(db: WordDatabase, langToLearn: LanguageToLearn) {
                     onDelete = { id ->
                         //groups.removeIf { group -> group.id == id }
                         wordDAO.deleteGroupAndWords(id)
-                    }
+                    },
+                    selectedGroup = selectedGroup
                 )
 
 
@@ -146,22 +151,31 @@ fun WordList(db: WordDatabase, langToLearn: LanguageToLearn) {
                 }
 
                 val localLifecycleOwner = LocalLifecycleOwner.current
-                val wordList by if (currentGroup < 0)
-                    remember {
+
+                val wordList by when {
+                    (currentGroup == -1) -> remember {
                         wordDAO.getAllWords(settings.langToLearn)
                             .flowWithLifecycle(localLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
                     }.collectAsState(initial = listOf())
-                else
-                    remember {
+                    (currentGroup == -2) -> remember {
+                        wordDAO.getAllWords(settings.langToLearn)
+                            .flowWithLifecycle(localLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
+                    }.collectAsState(initial = listOf())
+                    else -> remember {
                         wordDAO.getWords(currentGroup, settings.langToLearn)
                             .flowWithLifecycle(localLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
                     }.collectAsState(initial = listOf())
-
+                }
 
                 FullScreenDialog(
                     onDismiss = { groupDialog = false },
                     title = "Title",
-                    bottomBar = { if (currentGroup >= 0) BottomAppBar(FabClick = { /*TODO*/ }, SingleClick = { addSingleDialog = true }, ListClick = {}) }
+                    bottomBar = { if (currentGroup >= 0) BottomAppBar(FabClick = { /*TODO*/ }, SingleClick = { addSingleDialog = true }, ListClick = { addListDialog = true }) },
+                    confirmButton = {
+                        TextButton(onClick = { onGroupChange(currentGroup) }) {
+                            Text(stringResource(id = R.string.word_list_use), color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
                 ) {
                     Scaffold() { padding ->
                         Box(
@@ -177,6 +191,68 @@ fun WordList(db: WordDatabase, langToLearn: LanguageToLearn) {
                                 }
                             )
                         }
+                    }
+
+                    if (addListDialog) {
+                        var format by remember { mutableStateOf("1 -/– 2") }
+                        var textArea by remember { mutableStateOf("") }
+                        AlertDialog(
+                            onDismissRequest = { addListDialog = false },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    val splitformat = format.split(" ")
+                                    val firstLang = splitformat[0] == "1"
+                                    val delimiters = splitformat[1].split("/")
+
+                                    val rows = textArea.split("\n")
+                                    val words = mutableListOf<Word>()
+                                    println("delimiter: $delimiters")
+                                    for (row in rows) {
+                                        for (delimiter in delimiters) {
+                                            try {
+                                                val word = row.split(delimiter)
+                                                println("row: $row, word: $word")
+                                                words.add(
+                                                    Word(
+                                                        groupId = currentGroup,
+                                                        lang1 = if (firstLang) word[0] else word[1],
+                                                        lang2 = if (firstLang) word[1] else word[0],
+                                                        priority = settings.defaultPriority
+                                                    )
+                                                )
+                                            } catch (err: IndexOutOfBoundsException) {
+                                                continue
+                                            }
+                                        }
+                                    }
+                                    wordDAO.addWords(words)
+                                    addListDialog = false
+                                }) {
+                                    Text(text = stringResource(id = R.string.word_list_add))
+                                }
+                            },
+                            modifier = Modifier.heightIn(1.dp, Dp.Infinity),
+                            text = {
+                                Column(verticalArrangement = Arrangement.spacedBy(10f.dp)) {
+                                    OutlinedTextField(
+                                        //modifier = Modifier.weight(1f, false),
+                                        value = format,
+                                        onValueChange = { str -> format = str },
+                                        label = { Text("Format") },
+                                        singleLine = true
+                                    )
+                                    OutlinedTextField(
+                                        modifier = Modifier
+                                            .weight(1f, false)
+                                            .fillMaxHeight(),
+                                        value = textArea,
+                                        onValueChange = { str -> textArea = str },
+                                        label = { Text("Input") },
+                                        singleLine = false
+                                    )
+                                }
+                            }
+                        )
                     }
                 }
 
@@ -194,7 +270,7 @@ fun WordList(db: WordDatabase, langToLearn: LanguageToLearn) {
                                 addSingleDialog = false
                             }
                         }) {
-                            Text("Add")
+                            Text(stringResource(id = R.string.word_list_add))
                         }},
                         icon = { Icon(painter = painterResource(id = R.drawable.plus1_icon), contentDescription = "Plus1 button") },
                         text = {
